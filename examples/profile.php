@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Instagram\Api;
 use Instagram\Exception\InstagramException;
 
+ use Instagram\Utils\Proxy;
 use Psr\Cache\CacheException;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
@@ -12,6 +13,8 @@ require realpath(dirname(__FILE__)) . '/../vendor/autoload.php';
 $credentials = include_once realpath(dirname(__FILE__)) . '/credentials.php';
 
 $cachePool = new FilesystemAdapter('Instagram', 0, __DIR__ . '/../cache');
+
+//Proxy::set('45.142.28.83:8094');
 
 try {
     $api = new Api($cachePool);

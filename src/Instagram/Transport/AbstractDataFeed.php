@@ -7,7 +7,7 @@ namespace Instagram\Transport;
 use GuzzleHttp\ClientInterface;
 use Instagram\Auth\Session;
 use Instagram\Exception\{InstagramAuthException, InstagramFetchException};
-use Instagram\Utils\{UserAgentHelper, InstagramHelper};
+use Instagram\Utils\{Proxy, UserAgentHelper, InstagramHelper};
 
 abstract class AbstractDataFeed
 {
@@ -52,6 +52,10 @@ abstract class AbstractDataFeed
             $headers['cookies'] = $this->session->getCookies();
         }
 
+        if (!empty(Proxy::get())) {
+            $headers['proxy'] = Proxy::get();
+        }
+
         $res = $this->client->request('GET', $endpoint, $headers);
 
         $data = (string) $res->getBody();
@@ -80,6 +84,10 @@ abstract class AbstractDataFeed
             ],
             'cookies' => $this->session->getCookies(),
         ];
+
+        if (!empty(Proxy::get())) {
+            $options['proxy'] = Proxy::get();
+        }
 
         if (count($formParameters) > 0) {
             $options = array_merge($options, [
@@ -112,6 +120,7 @@ abstract class AbstractDataFeed
                 'headers' => [
                     'user-agent' => UserAgentHelper::AGENT_DEFAULT,
                 ],
+                'proxy' => Proxy::get()
             ]);
 
             $html = (string) $baseRequest->getBody();

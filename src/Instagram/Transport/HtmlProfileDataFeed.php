@@ -6,7 +6,7 @@ namespace Instagram\Transport;
 
 use GuzzleHttp\Exception\ClientException;
 use Instagram\Exception\InstagramFetchException;
-use Instagram\Utils\{InstagramHelper, UserAgentHelper};
+use Instagram\Utils\{InstagramHelper, Proxy, UserAgentHelper};
 
 class HtmlProfileDataFeed extends AbstractDataFeed
 {
@@ -28,6 +28,10 @@ class HtmlProfileDataFeed extends AbstractDataFeed
         
         if (!empty($this->session)) {
             $headers['cookies'] = $this->session->getCookies();
+        }
+
+        if (!empty(Proxy::get())) {
+            $headers['proxy'] = Proxy::get();
         }
 
         try {

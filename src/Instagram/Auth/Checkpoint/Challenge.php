@@ -7,7 +7,7 @@ namespace Instagram\Auth\Checkpoint;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Cookie\CookieJar;
 use Instagram\Exception\InstagramAuthException;
-use Instagram\Utils\{InstagramHelper, UserAgentHelper};
+use Instagram\Utils\{InstagramHelper, Proxy, UserAgentHelper};
 
 class Challenge
 {
@@ -64,6 +64,10 @@ class Challenge
             'cookies' => $this->cookieJar
         ];
 
+        if (!empty(Proxy::get())) {
+            $headers['proxy'] = Proxy::get();
+        }
+
         // fetch old cookie "mid" to next requests
         $this->midCookie = $this->cookieJar->getCookieByName('mid')->getValue();
 
@@ -118,6 +122,10 @@ class Challenge
                 'cookie'           => $cookie,
             ]
         ];
+
+        if (!empty(Proxy::get())) {
+            $postHeaders['proxy'] = Proxy::get();
+        }
 
         $res2 = $this->client->request('POST', $url, $postHeaders);
 
@@ -184,6 +192,10 @@ class Challenge
             ],
             'cookies'     => $cookieJarClean
         ];
+
+        if (!empty(Proxy::get())) {
+            $postHeaders['proxy'] = Proxy::get();
+        }
 
         $res3 = $this->client->request('POST', $this->checkPointUrl, $postHeaders);
 

@@ -8,7 +8,7 @@ use GuzzleHttp\{ClientInterface, Cookie\CookieJar};
 use GuzzleHttp\Exception\ClientException;
 use Instagram\Auth\Checkpoint\{Challenge, ImapClient};
 use Instagram\Exception\InstagramAuthException;
-use Instagram\Utils\{InstagramHelper, UserAgentHelper};
+use Instagram\Utils\{InstagramHelper, Proxy, UserAgentHelper};
 
 class Login
 {
@@ -65,6 +65,7 @@ class Login
             'headers' => [
                 'user-agent' => UserAgentHelper::AGENT_DEFAULT,
             ],
+            'proxy' => Proxy::get(),
         ]);
 
         $html = (string) $baseRequest->getBody();
@@ -92,6 +93,7 @@ class Login
                     'user-agent'  => UserAgentHelper::AGENT_DEFAULT,
                 ],
                 'cookies'     => $cookieJar,
+                'proxy' => Proxy::get(),
             ]);
         } catch (ClientException $exception) {
             $data = json_decode((string) $exception->getResponse()->getBody());
@@ -129,10 +131,6 @@ class Login
      */
     private function checkpointChallenge(CookieJar $cookieJar, \StdClass $data): CookieJar
     {
-        if (!$this->imapClient instanceof ImapClient) {
-            throw new InstagramAuthException('Checkpoint required, please provide IMAP credentials to process authentication.');
-        }
-
         $challenge = new Challenge($this->client, $cookieJar, $data->checkpoint_url, $this->challengeDelay);
 
         $challengeContent = $challenge->fetchChallengeContent();
@@ -140,8 +138,35 @@ class Login
         $challenge->sendSecurityCode($challengeContent);
         //$challenge->reSendSecurityCode($challengeContent);
 
-        $code = $this->imapClient->getLastInstagramEmailContent();
+        $code = $this->getSecurityCode();
 
         return $challenge->submitSecurityCode($challengeContent, $code);
+    }
+
+    private function getSecurityCode()
+    {
+        $security_code = '';
+        while (strlen($security_code) !== 6 && !is_int($security_code)) {
+            if ($security_code) {
+                print 'Wrong security code'.PHP_EOL;
+            }
+            print 'Enter security code: ';
+            $security_code = trim(fgets(STDIN));
+        }
+        return $security_code;
+    }
+
+    private function getSecurityCodeFromFile(){
+        $f = __DIR__ . '/code.txt';
+        $i = 0;
+
+        do {
+            $i++;
+            $code = file_get_contents($f);
+            print_r('Try - ' . $i . ' Code - ' . $code . "\n");
+            sleep(1);
+        } while (empty($code) && $i < 1000);
+
+        return $code;
     }
 }

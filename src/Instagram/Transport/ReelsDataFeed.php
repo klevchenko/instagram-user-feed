@@ -8,6 +8,7 @@ use GuzzleHttp\Cookie\SetCookie;
 use GuzzleHttp\Exception\ClientException;
 use Instagram\Exception\InstagramFetchException;
 use Instagram\Utils\Endpoints;
+use Instagram\Utils\Proxy;
 use Instagram\Utils\UserAgentHelper;
 
 class ReelsDataFeed extends AbstractDataFeed
@@ -58,6 +59,10 @@ class ReelsDataFeed extends AbstractDataFeed
         }
 
         $options = array_merge($options, ['form_params' => $params]);
+
+        if (!empty(Proxy::get())) {
+            $options['proxy'] = Proxy::get();
+        }
 
         try {
             $res = $this->client->request('POST', $endpoint, $options);

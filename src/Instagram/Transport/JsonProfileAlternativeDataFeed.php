@@ -8,6 +8,7 @@ use GuzzleHttp\Cookie\SetCookie;
 use GuzzleHttp\Exception\ClientException;
 use Instagram\Exception\InstagramFetchException;
 use Instagram\Utils\Endpoints;
+use Instagram\Utils\Proxy;
 use Instagram\Utils\UserAgentHelper;
 
 class JsonProfileAlternativeDataFeed extends AbstractDataFeed
@@ -43,6 +44,10 @@ class JsonProfileAlternativeDataFeed extends AbstractDataFeed
             ],
             'cookies' => $this->session->getCookies(),
         ];
+
+        if (!empty(Proxy::get())) {
+            $options['proxy'] = Proxy::get();
+        }
 
         try {
             $res = $this->client->request('GET', Endpoints::getProfileUrl($userId), $options);

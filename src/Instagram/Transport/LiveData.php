@@ -7,6 +7,7 @@ namespace Instagram\Transport;
 use GuzzleHttp\Exception\ClientException;
 use Instagram\Exception\InstagramFetchException;
 use Instagram\Utils\Endpoints;
+use Instagram\Utils\Proxy;
 use Instagram\Utils\UserAgentHelper;
 
 class LiveData extends AbstractDataFeed
@@ -29,6 +30,10 @@ class LiveData extends AbstractDataFeed
             ],
             'cookies' => $this->session->getCookies(),
         ];
+
+        if (!empty(Proxy::get())) {
+            $headers['proxy'] = Proxy::get();
+        }
 
         try {
             $res = $this->client->request('GET', $endpoint, $headers);
