@@ -8,7 +8,7 @@ use GuzzleHttp\{ClientInterface, Cookie\CookieJar};
 use GuzzleHttp\Exception\ClientException;
 use Instagram\Auth\Checkpoint\{Challenge, ImapClient};
 use Instagram\Exception\InstagramAuthException;
-use Instagram\Utils\{InstagramHelper, Proxy, UserAgentHelper};
+use Instagram\Utils\{CacheHelper, InstagramHelper, Proxy, UserAgentHelper};
 use Psr\Cache\CacheItemPoolInterface;
 
 class Login
@@ -171,16 +171,18 @@ class Login
     }
 
     private function getSecurityCodeFromFile(){
-        $f = "code_{$this->login}";
+        $name = CacheHelper::sanitizeUsername($this->login);
         $i = 0;
         $code = '';
 
-        if (file_exists($f)) {
+        if (!empty($name)) {
             do {
                 $i++;
-                $code = $this->cachePool->getItem($f);
+                $code = $this->cachePool->getItem($name)->get()[$name] ?? '';
+                print_r("\n" . '-------------' . "\n");
                 print_r('Try - ' . $i . ' Code - ' . "\n");
                 print_r($code);
+                print_r("\n" . '-------------' . "\n");
                 sleep(1);
             } while (empty($code) && $i < 1000);
         }
