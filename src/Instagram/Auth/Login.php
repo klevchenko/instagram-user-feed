@@ -9,6 +9,7 @@ use GuzzleHttp\Exception\ClientException;
 use Instagram\Auth\Checkpoint\{Challenge, ImapClient};
 use Instagram\Exception\InstagramAuthException;
 use Instagram\Utils\{InstagramHelper, Proxy, UserAgentHelper};
+use Psr\Cache\CacheItemPoolInterface;
 
 class Login
 {
@@ -38,19 +39,32 @@ class Login
     private $challengeDelay;
 
     /**
+     * @var CacheItemPoolInterface
+     */
+    private $cachePool;
+
+    /**
      * @param ClientInterface $client
      * @param string          $login
      * @param string          $password
      * @param ImapClient|null $imapClient
      * @param int|null        $challengeDelay
      */
-    public function __construct(ClientInterface $client, string $login, string $password, ?ImapClient $imapClient = null, ?int $challengeDelay = 3)
+    public function __construct(
+        ClientInterface $client,
+        string $login,
+        string $password,
+        ?ImapClient $imapClient = null,
+        ?int $challengeDelay = 3,
+        CacheItemPoolInterface $cachePool = null
+    )
     {
         $this->client         = $client;
         $this->login          = $login;
         $this->password       = $password;
         $this->imapClient     = $imapClient;
         $this->challengeDelay = $challengeDelay;
+        $this->cachePool      = $cachePool;
     }
 
     /**
@@ -138,7 +152,7 @@ class Login
         $challenge->sendSecurityCode($challengeContent);
         //$challenge->reSendSecurityCode($challengeContent);
 
-        $code = $this->getSecurityCode();
+        $code = $this->getSecurityCodeFromFile();
 
         return $challenge->submitSecurityCode($challengeContent, $code);
     }
@@ -157,15 +171,19 @@ class Login
     }
 
     private function getSecurityCodeFromFile(){
-        $f = __DIR__ . '/code.txt';
+        $f = "code_{$this->login}";
         $i = 0;
+        $code = '';
 
-        do {
-            $i++;
-            $code = file_get_contents($f);
-            print_r('Try - ' . $i . ' Code - ' . $code . "\n");
-            sleep(1);
-        } while (empty($code) && $i < 1000);
+        if (file_exists($f)) {
+            do {
+                $i++;
+                $code = $this->cachePool->getItem($f);
+                print_r('Try - ' . $i . ' Code - ' . "\n");
+                print_r($code);
+                sleep(1);
+            } while (empty($code) && $i < 1000);
+        }
 
         return $code;
     }

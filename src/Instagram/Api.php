@@ -106,7 +106,7 @@ class Api
      */
     public function login(string $username, string $password, ?ImapClient $imapClient = null): void
     {
-        $login = new Login($this->client, $username, $password, $imapClient, $this->challengeDelay);
+        $login = new Login($this->client, $username, $password, $imapClient, $this->challengeDelay, $this->cachePool);
 
         // fetch previous session and re-use it
         $sessionData = $this->cachePool->getItem(Session::SESSION_KEY . '.' . CacheHelper::sanitizeUsername($username));
